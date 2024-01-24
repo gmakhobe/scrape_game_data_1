@@ -36,7 +36,8 @@ class InitialBookInformation():
     while (count < rowsOfLinks):
       teamData = {
         "team_a": dataframe.iloc[count][0],
-        "team_b": dataframe.iloc[count][1]
+        "team_b": dataframe.iloc[count][1],
+        "match_total": dataframe.iloc[count][2]
       }
       listOfTeamData.append(teamData)
       count = count + 1
@@ -133,22 +134,42 @@ class TeamInformation():
     # 4. Scroll down to find team scores
     team_score_list = []
 
-    try:
-      count = 0
-      while (count < 7):
-        team_name = self.driver.find_element(By.XPATH, "//div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + count) + "]/div[3]").text
-        team_score = None
+    count = 0
+    loop_counter = 0
+    while (True):
 
-        if team_name == self.team_name:
-          team_score = self.driver.find_element(By.XPATH, "//div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + count) + "]/div[5]").text
-        else:
-          team_score = self.driver.find_element(By.XPATH, "//div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + count) + "]/div[6]").text
+      try:
+        is_todays_match = True if "Today's Matches" == self.driver.find_element(By.XPATH, "//section[@class='ui-section team-page-summary event ui-section--topIndented']/h1[@class='ui-section__title']").text else False
+      except:
+        is_todays_match = False
       
-        team_score_list.append(int(team_score))
+      next_table = ""
 
-        count = count + 1
-    except:
-      return False    
+      if is_todays_match:
+        next_table = "section[@class='ui-section event ui-section--topIndented'][1]/"
+        
+      try:
+        team_name = self.driver.find_element(By.XPATH, "//" + next_table + "div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + loop_counter) + "]/div[3]").text
+        team_score = None
+      
+        if team_name == self.team_name:
+          team_score = self.driver.find_element(By.XPATH, "//" + next_table + "div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + loop_counter) + "]/div[5]").text
+        else:
+          team_score = self.driver.find_element(By.XPATH, "//" + next_table + "div[@class='leagues--static event--leagues sportName basketball']/div[" + str(2 + loop_counter) + "]/div[6]").text
+        
+        loop_counter = loop_counter + 1
+      except:
+        loop_counter = loop_counter + 1
+        continue
+
+      print("Team score")
+      print(team_score)
+        
+      team_score_list.append(int(team_score))
+
+      if count == 5:
+        break
+      count = count + 1  
     
     self.team_score_list = team_score_list
     return True
@@ -199,9 +220,9 @@ class PostBookInformation():
       work_book_sheet["C10"] = "=SUM(A9;B9)"
       work_book_sheet["C11"] = "=SUM(C7;C8;C9;C10)"
       work_book_sheet["A12"] = "Expected Close (Under)"
-      work_book_sheet["B12"] = 0
+      work_book_sheet["B12"] = self.match_data[count]["match_total"]
       work_book_sheet["D12"] = "Expected Close (Over)"
-      work_book_sheet["E12"] = 0
+      work_book_sheet["E12"] = self.match_data[count]["match_total"]
       work_book_sheet["A13"] = "Q4 Average Close"
       work_book_sheet["B13"] = "=(SUM(C7:C8)/2)*4"
       work_book_sheet["D13"] = "Q4 Average Close"
@@ -276,7 +297,8 @@ class App():
           "team_b": None
         },
         "team_a_score": None,
-        "team_b_score": None
+        "team_b_score": None,
+        "match_total": None
       }
 
       team_a_obj = TeamInformation(self.listOfTeamUrls[count]["team_a"])
@@ -286,6 +308,7 @@ class App():
       
       match_data["team_names"]["team_a"] = team_a_obj.team_name
       match_data["team_a_score"] = team_a_obj.team_score_list
+      match_data["match_total"] = self.listOfTeamUrls[count]["match_total"]
       
       team_a_obj = None # De-references
       
