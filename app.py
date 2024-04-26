@@ -4,7 +4,7 @@ import pandas as pd
 import unittest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from appium.webdriver.common.touch_action import TouchAction
+#from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.action_chains import ActionChains
 from openpyxl import Workbook
 
@@ -53,7 +53,8 @@ class TeamInformation():
   """
   
   def __init__(self, team_url):
-    self.driver = webdriver.Chrome('C:\drivers\chromedriver.exe')
+    self.driver = webdriver.Firefox()
+    
     
     self.team_url = team_url
     self.team_name = None
@@ -63,6 +64,7 @@ class TeamInformation():
     """ Main Function
       This function generates Team Name & Team Score List.
     """
+    
     driver = self.driver
     
     driver.get(self.team_url)
@@ -285,8 +287,6 @@ class App():
     self.listOfTeamUrls = self.initBookInfo.getBookData()
     self.totalUrls = len(self.listOfTeamUrls)
     self.teamInformation = []
-
-    self
   
   def main(self):
     count = 0
@@ -300,7 +300,6 @@ class App():
         "team_b_score": None,
         "match_total": None
       }
-
       team_a_obj = TeamInformation(self.listOfTeamUrls[count]["team_a"])
       if team_a_obj.main() == False:
         print("Failed to get Team A information.")
